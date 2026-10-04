@@ -11,14 +11,14 @@ class FolderController extends Controller
     // Menampilkan daftar folder (Bisa memfilter berdasarkan parent_id untuk hierarki)
     public function index(Request $request)
     {
-        $query = Folder::with(['user:id,name', 'children', 'files']);
+        // Hsementara hapus 'files' jika modelnya belum ada
+        $query = Folder::with(['user:id,name', 'children']);
 
-        // Jika ada parameter parent_id, ambil sub-folder dari parent tersebut. Jika tidak, ambil Root Folder (null)
-        if ($request->has('parent_id')) {
-            $parentId = $request->parent_id === 'null' ? null : $request->parent_id;
+        $parentId = $request->input('parent_id');
+
+        if ($parentId && $parentId !== 'null' && $parentId !== 'undefined') {
             $query->where('parent_id', $parentId);
         } else {
-            // Default tampilkan root folder
             $query->whereNull('parent_id');
         }
 
