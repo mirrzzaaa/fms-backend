@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 
 class AuthController extends Controller
 {
@@ -27,8 +28,8 @@ class AuthController extends Controller
             ]);
         }
 
-        // Buat token Sanctum
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Buat token Sanctum dengan masa aktif 24 jam
+        $token = $user->createToken('auth_token', ['*'], Carbon::now()->addHours(24))->plainTextToken;
 
         return response()->json([
             'message' => 'Login berhasil',
