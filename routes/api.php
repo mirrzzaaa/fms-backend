@@ -27,6 +27,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('folders', FolderController::class);
 
     // Files API & Custom Download
-    Route::get('files/download/{file}', [FileController::class, 'download']);
+    Route::get('files/{file}/download', [FileController::class, 'download']);
     Route::apiResource('files', FileController::class);
 });
