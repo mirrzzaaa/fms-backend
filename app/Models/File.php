@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage; // <-- 1. Import facade Storage
 
 class File extends Model
 {
@@ -18,6 +19,19 @@ class File extends Model
         'file_path',
         'file_size',
     ];
+
+    // 2. Tambahkan appends agar atribut 'url' otomatis disertakan dalam JSON response
+    protected $appends = ['url'];
+
+    // 3. Buat accessor untuk menghasilkan URL publik file
+    public function getUrlAttribute()
+    {
+        if (!$this->file_path) {
+            return null;
+        }
+
+        return asset('storage/' . $this->file_path);
+    }
 
     /**
      * Relasi ke Folder tempat file berada

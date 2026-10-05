@@ -4,29 +4,26 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Folder;
+use App\Models\File;
 use Illuminate\Http\Request;
 
 class FolderController extends Controller
 {
-    // Menampilkan daftar folder (Bisa memfilter berdasarkan parent_id untuk hierarki)
+    // Menampilkan daftar folder dan file di Root (ketika folderId null)
     public function index(Request $request)
     {
-        // Hsementara hapus 'files' jika modelnya belum ada
-        $query = Folder::with(['user:id,name', 'children']);
+        // Mengambil folder tingkat root (parent_id null)
+        $folders = Folder::with(['user:id,name'])->whereNull('parent_id')->get();
 
-        $parentId = $request->input('parent_id');
-
-        if ($parentId && $parentId !== 'null' && $parentId !== 'undefined') {
-            $query->where('parent_id', $parentId);
-        } else {
-            $query->whereNull('parent_id');
-        }
-
-        $folders = $query->get();
+        // Mengambil file tingkat root (folder_id null) jika model File sudah ada
+        $files = class_exists(File::class) ? File::whereNull('folder_id')->get() : [];
 
         return response()->json([
             'success' => true,
-            'data' => $folders
+            'data' => [
+                'folders' => $folders,
+                'files' => $files
+            ]
         ]);
     }
 
@@ -41,7 +38,7 @@ class FolderController extends Controller
         $folder = Folder::create([
             'name' => $request->name,
             'parent_id' => $request->parent_id ?? null,
-            'user_id' => $request->user()->id, // Mengambil ID admin yang sedang login
+            'user_id' => $request->user()->id,
         ]);
 
         return response()->json([
@@ -51,14 +48,19 @@ class FolderController extends Controller
         ], 201);
     }
 
-    // Menampilkan detail folder beserta isi sub-folder dan file di dalamnya
+    // Menampilkan detail folder beserta isi sub-folder (children) dan file di dalamnya
     public function show(Folder $folder)
     {
-        $folder->load(['children', 'files.department', 'user:id,name', 'parent']);
+        // Memuat relasi anak folder dan file di dalam folder ini
+        $folder->load(['children', 'files', 'user:id,name', 'parent']);
 
         return response()->json([
             'success' => true,
-            'data' => $folder
+            'data' => [
+                'current_folder' => $folder,
+                'children' => $folder->children, // Sub-folder
+                'files' => $folder->files        // File di dalam folder ini
+            ]
         ]);
     }
 
@@ -83,12 +85,21 @@ class FolderController extends Controller
     // Menghapus folder (Khusus Administrator)
     public function destroy(Folder $folder)
     {
-        // Berdasarkan migration, onDelete('cascade') akan otomatis menghapus sub-folder dan file di dalamnya
         $folder->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Folder berhasil dihapus'
+        ]);
+    }
+
+    public function allFolders()
+    {
+        $folders = Folder::select('id', 'name', 'parent_id')->orderBy('name', 'asc')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $folders
         ]);
     }
 }

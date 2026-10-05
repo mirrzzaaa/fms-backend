@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\FolderController;
 use App\Http\Controllers\Api\FileController;
 use App\Http\Controllers\Api\DashboardController;
 
+Route::post('/login', [AuthController::class, 'login']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -17,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('departments', [DepartmentController::class, 'index']);
     Route::get('departments/{department}', [DepartmentController::class, 'show']);
 
+    Route::get('/folders/all', [FolderController::class, 'allFolders']);
     Route::get('folders', [FolderController::class, 'index']);
     Route::get('folders/{folder}', [FolderController::class, 'show']);
 
@@ -41,5 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('files', [FileController::class, 'store']);
         Route::put('files/{file}', [FileController::class, 'update']);
         Route::delete('files/{file}', [FileController::class, 'destroy']);
+
+
     });
 });
